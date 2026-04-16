@@ -1,34 +1,21 @@
-import { authClient } from "@/lib/auth-client";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { SignOutButton } from "./sign-out-button";
-import Image from "next/image";
+"use client"
 
-export default async function DashboardPage() {
+import Image from "next/image"
+import { useAuth } from "@/components/auth-provider"
+import { SignOutButton } from "./sign-out-button"
 
-    const cookie = (await headers()).get("cookie") ?? ""
-    const { data: session, error } = await authClient.getSession({
-      fetchOptions: {
-        headers: {
-          cookie,
-        },
-      },
-    })
+export default function DashboardPage() {
+  const { user } = useAuth()
 
-    if (error || !session) {
-      redirect("/sign-in")
-    }
-
-    console.log(session.user);
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome, {session.user?.email}</p>
-      <p>User ID: {session.user?.id}</p>
-      <p>User Name: {session.user?.name}</p>
-      <p>User Email: {session.user?.email}</p>
-      {session.user?.image && (
-        <Image src={session.user?.image} alt="User Image" width={100} height={100} />
+    <div className="px-4 py-2">
+      <h1 className="text-2xl ">Dashboard</h1>
+      <p>Welcome, {user?.email}</p>
+      <p>User ID: {user?.id}</p>
+      <p>User Name: {user?.name}</p>
+      <p>User Email: {user?.email}</p>
+      {user?.image && (
+        <Image src={user.image} alt="User Image" width={100} height={100} />
       )}
       <SignOutButton />
     </div>

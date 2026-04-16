@@ -78,21 +78,21 @@ export default function SignUpPage() {
         <CardContent className="px-6">
           <div className="grid gap-5">
             <Field className="grid gap-2">
-              <FieldLabel className="text-sm font-medium text-white/80">Email</FieldLabel>
+              <FieldLabel className="text-sm font-medium text-white/80 font-heading">Email</FieldLabel>
               <Input
                 type="email"
                 name="email"
                 placeholder="m@example.com"
                 autoComplete="email"
                 required
-                className="h-11 border-white/10 bg-black/40 text-white placeholder:text-white/35 focus-visible:ring-white/15"
+                className="h-11 border-white/10 bg-black/40 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-heading"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </Field>
 
             <Field className="grid gap-2">
-              <FieldLabel className="text-sm font-medium text-white/80">Password</FieldLabel>
+              <FieldLabel className="text-sm font-medium text-white/80 font-heading">Password</FieldLabel>
               <div className="relative">
                 <Input
                   type={passwordType}
@@ -100,7 +100,7 @@ export default function SignUpPage() {
                   placeholder="Create a password"
                   autoComplete="new-password"
                   required
-                  className="h-11 border-white/10 bg-black/40 pr-11 text-white placeholder:text-white/35 focus-visible:ring-white/15"
+                  className="h-11 border-white/10 bg-black/40 pr-11 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-heading"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -120,7 +120,7 @@ export default function SignUpPage() {
             </Field>
 
             <Field className="grid gap-2">
-              <FieldLabel className="text-sm font-medium text-white/80">Confirm password</FieldLabel>
+              <FieldLabel className="text-sm font-medium text-white/80 font-heading">Confirm password</FieldLabel>
               <div className="relative">
                 <Input
                   type={confirmPasswordType}
@@ -136,7 +136,7 @@ export default function SignUpPage() {
                   type="button"
                   aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                   onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/5 hover:text-white"
+                  className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/5 hover:text-white font-heading"
                 >
                   {showConfirmPassword ? (
                     <RiEyeLine className="h-[18px] w-[18px] opacity-90" />
@@ -151,7 +151,7 @@ export default function SignUpPage() {
               type="button"
               onClick={handleSignUp}
               disabled={isSigningUp}
-              className="h-11 w-full bg-white text-black hover:bg-white/90 disabled:opacity-70"
+              className="h-11 w-full bg-white text-black hover:bg-white/90 disabled:opacity-70 font-heading text-[14px]"
             >
               Sign Up
             </Button>
@@ -179,10 +179,10 @@ export default function SignUpPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-11 w-full border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="h-11 w-full border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white font-heading text-[14px]"
               onClick={handleSignInWithGoogle}
             >
-              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center">
+              <span className="inline-flex h-5 w-5 items-center justify-center">
                 <RiGoogleFill className="h-[18px] w-[18px]" />
               </span>
               Google

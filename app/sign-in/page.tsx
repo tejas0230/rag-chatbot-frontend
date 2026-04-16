@@ -62,7 +62,7 @@ export default function SignInPage() {
 
         <CardHeader className="space-y-2 pt-10 text-center">
           <CardTitle className="text-3xl font-semibold tracking-tight">Sign In</CardTitle>
-          <CardDescription className="text-white/60">
+          <CardDescription className="text-white/60 font-heading">
             Enter your email and password to login
           </CardDescription>
         </CardHeader>
@@ -70,14 +70,14 @@ export default function SignInPage() {
         <CardContent className="px-6">
           <div className="grid gap-5">
             <Field className="grid gap-2">
-              <FieldLabel className="text-sm font-medium text-white/80">Email</FieldLabel>
+              <FieldLabel className="text-sm font-medium text-white/80 font-heading">Email</FieldLabel>
               <Input
                 type="email"
                 name="email"
                 placeholder="m@example.com"
                 autoComplete="email"
                 required
-                className="h-11 border-white/10 bg-black/40 text-white placeholder:text-white/35 focus-visible:ring-white/15"
+                className="h-11 border-white/10 bg-black/40 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-heading"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -85,7 +85,7 @@ export default function SignInPage() {
 
             <Field className="grid gap-2">
               <div className="flex items-center justify-between gap-3">
-                <FieldLabel className="text-sm font-medium text-white/80">Password</FieldLabel>
+                <FieldLabel className="text-sm font-medium text-white/80 font-heading">Password</FieldLabel>
                 <Link
                   href="/forgot-password"
                   className="text-xs text-white/55 underline-offset-4 transition hover:text-white hover:underline"
@@ -100,7 +100,7 @@ export default function SignInPage() {
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   required
-                  className="h-11 border-white/10 bg-black/40 pr-11 text-white placeholder:text-white/35 focus-visible:ring-white/15"
+                  className="h-11 border-white/10 bg-black/40 pr-11 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-heading"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -123,7 +123,7 @@ export default function SignInPage() {
               type="button"
               onClick={handleSignIn}
               disabled={isSigningIn}
-              className="h-11 w-full bg-white text-black hover:bg-white/90 disabled:opacity-70"
+              className="h-11 w-full bg-white text-black hover:bg-white/90 disabled:opacity-70 font-heading text-[14px]"
             >
               Sign In
             </Button>
@@ -139,10 +139,10 @@ export default function SignInPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-11 w-full border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white"
+              className="h-11 w-full border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white font-heading text-[14px]"
               onClick={handleSignInWithGoogle}
             >
-              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center">
+              <span className="inline-flex h-5 w-5 items-center justify-center">
                 <RiGoogleFill className="h-[18px] w-[18px]" />
               </span>
               Google
