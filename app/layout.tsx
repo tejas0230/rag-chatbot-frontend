@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Raleway, Montserrat } from "next/font/google"
+import { Geist, Geist_Mono, Raleway, Montserrat, Outfit, Manrope, Plus_Jakarta_Sans } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 
 const montserratHeading = Montserrat({subsets:['latin'],variable:'--font-heading'});
 
-const raleway = Raleway({subsets:['latin'],variable:'--font-sans'})
+const plusJakartaSans = Plus_Jakarta_Sans({subsets:['latin'],variable:'--font-sans'})
+
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
@@ -22,7 +23,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", raleway.variable, montserratHeading.variable)}
+      className={cn("antialiased", fontMono.variable, "font-sans", montserratHeading.variable, plusJakartaSans.variable)}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>

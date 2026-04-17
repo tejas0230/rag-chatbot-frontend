@@ -1,7 +1,4 @@
 import axios from "axios";
-import { useRouter } from "next/navigation";
-
-const router = useRouter();
 
 export const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -20,11 +17,11 @@ export const api = axios.create({
 });
 
 api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response?.status === 401) {
-        router.push("/sign-in");
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      window.location.href = "/sign-in"
     }
-    return Promise.reject(error);
-  }
-);
+    return Promise.reject(error)
+  },
+)

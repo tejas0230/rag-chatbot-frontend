@@ -27,13 +27,13 @@ import {
 } from "@remixicon/react"
 import { useAuth } from "@/components/auth-provider"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
 export function DashboardSidebar() {
   const router = useRouter()
   const { user } = useAuth()
   const [isSigningOut, setIsSigningOut] = useState(false)
-
+  const pathname = usePathname()
   const handleSignOut = async () => {
     if (isSigningOut) return
     setIsSigningOut(true)
@@ -87,7 +87,7 @@ export function DashboardSidebar() {
   ]
 
   return (
-    <Sidebar>
+    <Sidebar variant="inset">
       <SidebarHeader className="p-2">
         <ProjectSelector />
       </SidebarHeader>
@@ -97,10 +97,10 @@ export function DashboardSidebar() {
 
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center justify-between gap-2 px-4">
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild isActive={pathname === "/dashboard"}>
               <Link href="/dashboard">
                 <RiHomeLine className="size-4" />
-                <span>Dashboard</span>
+                <span className="text-sm relative top-[-1px]">Dashboard</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>  
@@ -112,10 +112,10 @@ export function DashboardSidebar() {
             <SidebarMenu>
               {sidebarItems.map((item) => (
                 <SidebarMenuItem key={item.href} className="flex items-center justify-between gap-2 pl-4">
-                  <SidebarMenuButton asChild>
-                    <Link href={item.href}>
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
+                    <Link href={item.href} className="flex items-center gap-2 justify-start">
                       <item.icon />
-                      <span>{item.label}</span>
+                      <span className="text-sm relative top-[-1px]">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -130,10 +130,10 @@ export function DashboardSidebar() {
             <SidebarMenu>
               {sidebarSettingsItems.map((item) => (
                 <SidebarMenuItem key={item.href} className="flex items-center justify-between gap-2 pl-4">
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>
                       <item.icon />
-                      <span>{item.label}</span>
+                      <span className="text-sm relative top-[-1px]">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -148,10 +148,10 @@ export function DashboardSidebar() {
             <SidebarMenu>
               {sidebarAccountItems.map((item) => (
                 <SidebarMenuItem key={item.href} className="flex items-center justify-between gap-2 pl-4">
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>
                       <item.icon />
-                      <span>{item.label}</span>
+                      <span className="text-sm relative top-[-1px]">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
