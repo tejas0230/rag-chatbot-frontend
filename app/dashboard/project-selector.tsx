@@ -44,10 +44,10 @@ export function ProjectSelector() {
                     <RiBuildingLine className="size-4" />
                   </span>
                   <span className="flex min-w-0 flex-col leading-tight">
-                    <span className="truncate text-sm font-semibold tracking-tight">
+                    <span className="truncate text-sm font-semibold tracking-tight font-heading">
                       {selectedName}
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">{selectedSubtitle}</span>
+                    <span className="truncate text-xs text-muted-foreground font-sans">{selectedSubtitle}</span>
                   </span>
                 </span>
                 <RiArrowDownSLine className="ml-2 size-4 shrink-0 text-muted-foreground" />
@@ -78,7 +78,7 @@ export function ProjectSelector() {
                     <span className="mr-2 grid size-7 shrink-0 place-items-center rounded-md bg-muted text-foreground">
                       <RiBuildingLine className="size-4" />
                     </span>
-                    <span className="flex-1 truncate">{name}</span>
+                    <span className="flex-1 truncate text-sm font-heading">{name}</span>
                     {isSelected && (
                       <RiCheckLine className="ml-2 size-4 shrink-0 text-primary" />
                     )}
@@ -95,7 +95,7 @@ export function ProjectSelector() {
                 <span className="mr-2 grid size-7 shrink-0 place-items-center rounded-md border border-dashed bg-muted text-foreground">
                   <RiAddLine className="size-4" />
                 </span>
-                New project
+                <span className="text-sm font-heading">New project</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -57,19 +57,15 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-black/95 px-4 py-10 flex items-center justify-center">
-      <Card className="relative w-full max-w-md border-white/10 bg-neutral-950 text-white shadow-2xl shadow-black/40">
+    <div className="min-h-screen w-full bg-black/95 px-4 py-10 flex flex-col items-center justify-center">
 
-        <CardHeader className="space-y-2 pt-10 text-center">
-          <CardTitle className="text-3xl font-semibold tracking-tight">Sign In</CardTitle>
-          <CardDescription className="text-white/60 font-heading">
+          <h1 className="text-2xl font-semibold tracking-tight font-heading">Sign In</h1>
+          <p className="text-muted-foreground font-sans text-sm">
             Enter your email and password to login
-          </CardDescription>
-        </CardHeader>
+          </p>
 
-        <CardContent className="px-6">
-          <div className="grid gap-5">
-            <Field className="grid gap-2">
+          <div className="grid gap-5 mt-4 w-full max-w-sm">
+            <Field className="grid gap-1">
               <FieldLabel className="text-sm font-medium text-white/80 font-heading">Email</FieldLabel>
               <Input
                 type="email"
@@ -77,13 +73,13 @@ export default function SignInPage() {
                 placeholder="m@example.com"
                 autoComplete="email"
                 required
-                className="h-11 border-white/10 bg-black/40 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-heading"
+                className="h-11 border-white/10 bg-black/40 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-sans text-sm font-light"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </Field>
 
-            <Field className="grid gap-2">
+            <Field className="grid gap-1">
               <div className="flex items-center justify-between gap-3">
                 <FieldLabel className="text-sm font-medium text-white/80 font-heading">Password</FieldLabel>
                 <Link
@@ -100,7 +96,7 @@ export default function SignInPage() {
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   required
-                  className="h-11 border-white/10 bg-black/40 pr-11 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-heading"
+                  className="h-11 border-white/10 bg-black/40 pr-11 text-white placeholder:text-white/35 focus-visible:ring-white/15 font-sans text-sm font-light"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -123,7 +119,7 @@ export default function SignInPage() {
               type="button"
               onClick={handleSignIn}
               disabled={isSigningIn}
-              className="h-11 w-full bg-white text-black hover:bg-white/90 disabled:opacity-70 font-heading text-[14px]"
+              className="h-11 w-full bg-white text-black hover:bg-white/90 disabled:opacity-70 font-heading text-[14px] hover:cursor-pointer hover:bg-white/90"
             >
               Sign In
             </Button>
@@ -162,17 +158,13 @@ export default function SignInPage() {
               </div>
             )}
           </div>
-        </CardContent>
 
-        <CardFooter className="flex items-center justify-center pb-8 pt-6 text-sm text-white/60">
-          <span>
+          <span className="text-sm font-sans text-muted-foreground mt-4">
             Don't have an account?{" "}
             <Link href="/sign-up" className="text-white underline-offset-4 hover:underline">
               Sign Up
             </Link>
           </span>
-        </CardFooter>
-      </Card>
     </div>
   )
 }

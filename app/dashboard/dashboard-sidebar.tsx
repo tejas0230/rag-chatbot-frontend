@@ -178,8 +178,8 @@ export function DashboardSidebar() {
                 className="size-9 rounded-full bg-muted"
               />
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium">{user?.name}</div>
-                <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
+                <div className="truncate text-sm font-medium font-heading">{user?.name}</div>
+                <div className="truncate text-xs text-muted-foreground font-sans">{user?.email}</div>
               </div>
             </button>
 

@@ -36,10 +36,10 @@ export default function DashboardPage() {
       ) : (
         /* ── Project dashboard ── */
         <div className="w-full">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight font-heading">
             {selectedProject?.name ?? "Dashboard"}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground font-sans">
             {selectedProject?.description ?? "Select a section from the sidebar to get started."}
           </p>
         </div>

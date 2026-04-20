@@ -1,18 +1,12 @@
-import { Geist, Geist_Mono, Raleway, Montserrat, Outfit, Manrope, Plus_Jakarta_Sans } from "next/font/google"
+import { Outfit, Manrope } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils";
 
-const montserratHeading = Montserrat({subsets:['latin'],variable:'--font-heading'});
+const outfit = Outfit({subsets:['latin'],variable:'--font-heading'})
+const manrope = Manrope({subsets:['latin'],variable:'--font-sans'})
 
-const plusJakartaSans = Plus_Jakarta_Sans({subsets:['latin'],variable:'--font-sans'})
-
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
 
 export default function RootLayout({
   children,
@@ -23,9 +17,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", montserratHeading.variable, plusJakartaSans.variable)}
+      className={cn("antialiased", "font-sans", outfit.variable, manrope.variable)}
     >
-      <body>
+      <body className="min-h-screen bg-background text-foreground">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
