@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useProfile } from "@/components/profile-provider"
 import { RiCloseLine, RiDeleteBinLine, RiFileTextLine, RiGlobalLine, RiUploadLine } from "@remixicon/react"
 import { api } from "@/lib/api"
@@ -27,21 +27,40 @@ function classifySourceRow(r: Record<string, unknown>): ListedSource | null {
         : typeof r.value === "string"
           ? r.value
           : ""
-  const fileLabel =
-    r.fileName ?? r.filename ?? r.originalFilename ?? (typeof r.name === "string" && !urlVal ? r.name : undefined)
+  const fileLabel = r.fileName ?? r.filename ?? r.originalFilename ?? (typeof r.name === "string" ? r.name : undefined)
 
   let category: "url" | "file"
-  if (typeStr.includes("file") || typeStr.includes("document") || typeStr.includes("upload")) category = "file"
-  else if (typeStr.includes("url") || typeStr.includes("web") || typeStr.includes("link") || typeStr.includes("scrape"))
+  // Prefer the backend's `src.type` (or equivalent) over heuristics.
+  // If the backend says "url/web", show under Websites; otherwise, treat as Files
+  // even if a public download URL exists (e.g. PDFs).
+  if (typeStr) {
+    if (typeStr === "url" || typeStr === "web" || typeStr === "website" || typeStr === "link") category = "url"
+    else category = "file"
+  } else if (fileLabel && !urlVal) {
+    category = "file"
+  } else if (urlVal) {
     category = "url"
-  else if (fileLabel && !urlVal) category = "file"
-  else if (urlVal) category = "url"
-  else category = "file"
+  } else {
+    category = "file"
+  }
 
-  const label =
-    category === "url"
-      ? urlVal || String(fileLabel ?? idStr)
-      : String(fileLabel ?? (urlVal || idStr))
+  let label: string
+  if (category === "url") {
+    label = urlVal || String(fileLabel ?? idStr)
+  } else {
+    const fallbackFromUrl = (() => {
+      if (!urlVal) return null
+      try {
+        const u = new URL(urlVal)
+        const last = u.pathname.split("/").filter(Boolean).at(-1)
+        return last ? decodeURIComponent(last) : null
+      } catch {
+        const last = urlVal.split("/").filter(Boolean).at(-1)
+        return last ?? null
+      }
+    })()
+    label = String(fileLabel ?? fallbackFromUrl ?? idStr)
+  }
 
   return { id: idStr, label, category }
 }
@@ -98,6 +117,97 @@ async function postSources(formData: FormData) {
   return res.data
 }
 
+/** Response shape: URL create 201: { sources: [newSource], jobId } — files: { sources, jobIds } */
+type IngestionSeed = { jobId: string; sourceId: string; label: string; category: "url" | "file" }
+
+function parseCreateSourcesResponse(data: unknown): IngestionSeed[] {
+  const root = asRecord(data)
+  if (!root) return []
+  const jobIdSingle = root.jobId
+  const jobIdsMulti = root.jobIds
+  const jobIds: string[] = []
+  if (typeof jobIdSingle === "string" && jobIdSingle) jobIds.push(jobIdSingle)
+  if (Array.isArray(jobIdsMulti)) for (const j of jobIdsMulti) jobIds.push(String(j))
+  const rawSources = Array.isArray(root.sources) ? root.sources : []
+  const sources = rawSources
+    .map((item) => classifySourceRow(asRecord(item) ?? {}))
+    .filter((row): row is ListedSource => row != null)
+  if (jobIds.length === 0) return []
+  const pairs: IngestionSeed[] = []
+  for (let i = 0; i < jobIds.length; i++) {
+    const s = sources[i]
+    if (!s) continue
+    pairs.push({ jobId: jobIds[i], sourceId: s.id, label: s.label, category: s.category })
+  }
+  return pairs
+}
+
+type JobProgressRow = {
+  id: string
+  status: string
+  pagesTotal: number | null
+  pagesDone: number | null
+  errorMessage: string | null
+  sourceId: string
+  sourceStatus: string
+}
+
+type IngestionState = {
+  jobId: string
+  sourceId: string
+  label: string
+  category: "url" | "file"
+  pagesTotal: number
+  pagesDone: number
+  jobStatus: string
+  sourceStatus: string
+  errorMessage: string | null
+}
+
+function isIngestionComplete(jobStatus: string, sourceStatus: string) {
+  const j = jobStatus.toLowerCase()
+  const s = (sourceStatus || "").toLowerCase()
+  const jobDone = j === "done" || j === "completed" || j === "success"
+  return jobDone && s === "ready"
+}
+
+function isJobFailed(jobStatus: string) {
+  const j = jobStatus.toLowerCase()
+  return j === "failed" || j === "error" || j === "cancelled"
+}
+
+function IngestionProgress({ ing }: { ing: IngestionState }) {
+  const total = ing.pagesTotal
+  const done = ing.pagesDone
+  const pct =
+    total > 0
+      ? Math.min(100, Math.round((done / Math.max(total, 1)) * 100))
+      : null
+  return (
+    <div className="mt-1.5 w-full space-y-1">
+      {ing.errorMessage && <p className="text-xs text-destructive">{ing.errorMessage}</p>}
+      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span className="min-w-0 truncate">
+          Indexing
+          {ing.jobStatus && ing.jobStatus !== "pending" ? ` · job ${ing.jobStatus}` : ""}
+          {ing.sourceStatus && ing.sourceStatus !== "pending" ? ` · source ${ing.sourceStatus}` : ""}
+        </span>
+        {total > 0 && (
+          <span className="shrink-0 tabular-nums">
+            {done}/{total} pages
+          </span>
+        )}
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full bg-primary transition-[width] duration-500 ease-out"
+          style={{ width: pct != null ? `${pct}%` : "40%" }}
+        />
+      </div>
+    </div>
+  )
+}
+
 function apiErrorMessage(err: unknown, fallback: string) {
   if (axios.isAxiosError(err)) {
     const d = err.response?.data as { message?: string } | undefined
@@ -128,6 +238,40 @@ export default function KnowledgeBasePage() {
   const [filesError, setFilesError] = useState<string | null>(null)
   const [filesSuccess, setFilesSuccess] = useState(false)
 
+  const [pendingJobIds, setPendingJobIds] = useState<string[]>([])
+  const [ingestionBySourceId, setIngestionBySourceId] = useState<Record<string, IngestionState>>({})
+  const pendingJobIdsRef = useRef(pendingJobIds)
+  pendingJobIdsRef.current = pendingJobIds
+  const pendingKey = useMemo(() => [...pendingJobIds].sort().join(","), [pendingJobIds])
+
+  const seedIngestionFromResponse = useCallback((data: unknown) => {
+    const pairs = parseCreateSourcesResponse(data)
+    if (pairs.length === 0) return false
+    setIngestionBySourceId((prev) => {
+      const next = { ...prev }
+      for (const p of pairs) {
+        next[p.sourceId] = {
+          jobId: p.jobId,
+          sourceId: p.sourceId,
+          label: p.label,
+          category: p.category,
+          pagesTotal: 0,
+          pagesDone: 0,
+          jobStatus: "pending",
+          sourceStatus: "pending",
+          errorMessage: null,
+        }
+      }
+      return next
+    })
+    setPendingJobIds((prev) => {
+      const s = new Set(prev)
+      for (const p of pairs) s.add(p.jobId)
+      return Array.from(s)
+    })
+    return true
+  }, [])
+
   const loadSources = useCallback(async (projectId: string) => {
     setSourcesLoading(true)
     setSourcesListError(null)
@@ -148,10 +292,74 @@ export default function KnowledgeBasePage() {
     if (!selectedProjectId) {
       setRemoteSources([])
       setSourcesListError(null)
+      setPendingJobIds([])
+      setIngestionBySourceId({})
       return
     }
     void loadSources(selectedProjectId)
   }, [selectedProjectId, loadSources])
+
+  useEffect(() => {
+    if (!selectedProjectId) return
+    if (pendingJobIds.length === 0) return
+    let cancelled = false
+    const run = async () => {
+      const jobIds = pendingJobIdsRef.current
+      if (jobIds.length === 0) return
+      try {
+        const { data } = await api.post("/jobs/progress", {
+          data: { jobIds },
+        })
+        if (cancelled) return
+        const rows = Array.isArray(data) ? data : []
+        setIngestionBySourceId((prev) => {
+          const next = { ...prev }
+          for (const row of rows) {
+            const hit = Object.values(next).find((i) => i.jobId === row.id)
+            if (!hit) continue
+            next[hit.sourceId] = {
+              ...hit,
+              pagesTotal: row.pagesTotal ?? 0,
+              pagesDone: row.pagesDone ?? 0,
+              jobStatus: row.status,
+              sourceStatus: row.sourceStatus,
+              errorMessage: row.errorMessage,
+            }
+          }
+          return next
+        })
+        const doneJobIds = new Set<string>()
+        const successSourceIds = new Set<string>()
+        for (const row of rows) {
+          if (isIngestionComplete(row.status, row.sourceStatus)) {
+            doneJobIds.add(row.id)
+            successSourceIds.add(row.sourceId)
+          } else if (isJobFailed(row.status)) {
+            doneJobIds.add(row.id)
+          }
+        }
+        if (doneJobIds.size > 0) {
+          setPendingJobIds((p) => p.filter((id) => !doneJobIds.has(id)))
+          if (successSourceIds.size > 0) {
+            setIngestionBySourceId((prev) => {
+              const n = { ...prev }
+              for (const sid of successSourceIds) delete n[sid]
+              return n
+            })
+          }
+          void loadSources(selectedProjectId)
+        }
+      } catch {
+        // keep polling; transient errors
+      }
+    }
+    void run()
+    const id = window.setInterval(() => void run(), 2000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [selectedProjectId, pendingKey, loadSources])
 
   const savedUrlSources = remoteSources.filter((s) => s.category === "url")
   const savedFileSources = remoteSources.filter((s) => s.category === "file")
@@ -160,6 +368,14 @@ export default function KnowledgeBasePage() {
     if (!selectedProjectId) return
     setDeletingId(id)
     setDeleteError(null)
+    const jobId = ingestionBySourceId[id]?.jobId
+    setIngestionBySourceId((prev) => {
+      if (!prev[id]) return prev
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+    if (jobId) setPendingJobIds((p) => p.filter((j) => j !== jobId))
     try {
       await api.delete(`/sources/${id}/project/${selectedProjectId}`)
       await loadSources(selectedProjectId)
@@ -198,8 +414,9 @@ export default function KnowledgeBasePage() {
       const fd = new FormData()
       fd.append("url", url.trim())
       fd.append("projectId", selectedProjectId)
-      await postSources(fd)
-      setUrlSuccess(true)
+      const resData = await postSources(fd)
+      const started = seedIngestionFromResponse(resData)
+      setUrlSuccess(!started)
       setUrl("")
       await loadSources(selectedProjectId)
     } catch (err: any) {
@@ -222,8 +439,9 @@ export default function KnowledgeBasePage() {
       const fd = new FormData()
       fd.append("projectId", selectedProjectId)
       files.forEach((f) => fd.append("files", f))
-      await postSources(fd)
-      setFilesSuccess(true)
+      const resData = await postSources(fd)
+      const started = seedIngestionFromResponse(resData)
+      setFilesSuccess(!started)
       setFiles([])
       await loadSources(selectedProjectId)
     } catch (err: any) {
@@ -265,27 +483,37 @@ export default function KnowledgeBasePage() {
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : savedUrlSources.length > 0 ? (
             <ul className="divide-y rounded-md border border-border">
-              {savedUrlSources.map((s) => (
-                <li key={s.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                  <RiGlobalLine className="size-3.5 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate text-foreground" title={s.label}>
-                    {s.label}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => void handleDeleteSource(s.id)}
-                    disabled={deletingId === s.id}
-                    className="shrink-0 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-40"
-                    aria-label={`Remove ${s.label}`}
-                  >
-                    {deletingId === s.id ? (
-                      <span className="text-xs">…</span>
-                    ) : (
-                      <RiDeleteBinLine className="size-4" />
-                    )}
-                  </button>
-                </li>
-              ))}
+              {savedUrlSources.map((s) => {
+                const ing = ingestionBySourceId[s.id]
+                return (
+                  <li key={s.id} className="px-3 py-2.5 text-sm">
+                    <div className="flex items-start gap-3">
+                      <RiGlobalLine className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="min-w-0 flex-1 truncate text-foreground" title={s.label}>
+                            {s.label}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteSource(s.id)}
+                            disabled={deletingId === s.id}
+                            className="shrink-0 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-40"
+                            aria-label={`Remove ${s.label}`}
+                          >
+                            {deletingId === s.id ? (
+                              <span className="text-xs">…</span>
+                            ) : (
+                              <RiDeleteBinLine className="size-4" />
+                            )}
+                          </button>
+                        </div>
+                        {ing && <IngestionProgress ing={ing} />}
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           ) : (
             !isLoading && selectedProjectId && (
@@ -336,27 +564,37 @@ export default function KnowledgeBasePage() {
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : savedFileSources.length > 0 ? (
             <ul className="divide-y rounded-md border border-border">
-              {savedFileSources.map((s) => (
-                <li key={s.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                  <RiFileTextLine className="size-3.5 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0 flex-1 truncate text-foreground" title={s.label}>
-                    {s.label}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => void handleDeleteSource(s.id)}
-                    disabled={deletingId === s.id}
-                    className="shrink-0 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-40"
-                    aria-label={`Remove ${s.label}`}
-                  >
-                    {deletingId === s.id ? (
-                      <span className="text-xs">…</span>
-                    ) : (
-                      <RiDeleteBinLine className="size-4" />
-                    )}
-                  </button>
-                </li>
-              ))}
+              {savedFileSources.map((s) => {
+                const ing = ingestionBySourceId[s.id]
+                return (
+                  <li key={s.id} className="px-3 py-2.5 text-sm">
+                    <div className="flex items-start gap-3">
+                      <RiFileTextLine className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="min-w-0 flex-1 truncate text-foreground" title={s.label}>
+                            {s.label}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteSource(s.id)}
+                            disabled={deletingId === s.id}
+                            className="shrink-0 text-muted-foreground transition-colors hover:text-destructive disabled:opacity-40"
+                            aria-label={`Remove ${s.label}`}
+                          >
+                            {deletingId === s.id ? (
+                              <span className="text-xs">…</span>
+                            ) : (
+                              <RiDeleteBinLine className="size-4" />
+                            )}
+                          </button>
+                        </div>
+                        {ing && <IngestionProgress ing={ing} />}
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           ) : (
             !isLoading && selectedProjectId && (

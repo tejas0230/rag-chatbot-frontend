@@ -115,7 +115,7 @@ export function DashboardSidebar() {
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href} className="flex items-center gap-2 justify-start">
                       <item.icon />
-                      <span className="text-sm relative top-[-1px]">{item.label}</span>
+                      <span className="text-sm relative top-[-1px] font-light">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
